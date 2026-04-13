@@ -5,8 +5,9 @@
 // Description : Project Two ADCU Advising Assistance Program (Binary Search Tree)
 //============================================================================
 
-
 #include <iostream>
+#include <sstream>
+#include <vector>
 
 using namespace std;
 
@@ -218,16 +219,75 @@ vector<string> split(string line) {
  * @return
  */
 int main() {
-  // TIP Press <shortcut actionId="RenameElement"/> when your caret is at the <b>lang</b> variable name to see how CLion can help you rename it.
 
-  const auto lang = "C++";
-  std::cout << "Hello and welcome to " << lang << "!\n";
+  BinarySearchTree* bst = new BinarySearchTree();
 
-  for (int i = 1; i <= 5; i++) {
-    // TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-    std::cout << "i = " << i << std::endl;
+  int choice = 0;
+  string fileName;
+  string courseNumber;
+
+  cout << "Welcome to the course planner." << endl;
+
+  while (choice != 9) {
+    cout << "  1. Load Data Structure" << endl;
+    cout << "  2. Print Course List" << endl;
+    cout << "  3. Print Course" << endl;
+    cout << "  4. Exit" << endl;
+    cout << "What would you like to do?" << endl;
+    cin >> choice;
+
+    switch (choice) {
+      case 1:
+        cout << "Enter file name: ";
+        cin >> fileName;
+        // TODO: Implement loading file
+        break;
+      case 2:
+        if (bst->isEmpty()) {
+          cout << "No courses loaded."  << endl;
+        } else {
+          cout << "Here is a sample schedule:" << endl;
+          bst->InOrder();
+        }
+        break;
+      case 3:
+        if (bst->isEmpty()) {
+          cout << "No courses loaded."  << endl;
+        } else {
+          cout << "What course do you want to know about? ";
+          cin >> courseNumber;
+          courseNumber = toUpperCase(courseNumber);
+          Course course = bst->Search(courseNumber);
+
+          if (course.courseNumber.empty()) {
+            cout << "Course not found." << endl;
+          } else {
+            cout << course.courseNumber << ", " << course.courseTitle << endl;
+
+            if (course.prerequisites.empty()) {
+              cout << "Prerequisites: None" << endl;
+            } else {
+              cout << "Prerequisites: ";
+              for (size_t i = 0; i < course.prerequisites.size(); ++i) {
+                cout << course.prerequisites.at(i);
+                if (i < course.prerequisites.size() - 1) {
+                  cout << ", ";
+                }
+              }
+              cout << endl;
+            }
+          }
+        }
+        break;
+      case 9:
+        cout << "Thank you for using the course planner!" << endl;
+        break;
+      default:
+        cout << choice << " is not a valid option." << endl;
+        break;
+    }
   }
 
+  delete bst;
   return 0;
-  // TIP See CLion help at <a href="https://www.jetbrains.com/help/clion/">jetbrains.com/help/clion/</a>. Also, you can try interactive lessons for CLion by selecting 'Help | Learn IDE Features' from the main menu.
 }
