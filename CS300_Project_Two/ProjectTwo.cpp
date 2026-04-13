@@ -1,3 +1,5 @@
+
+
 #include <iostream>
 
 using namespace std;
@@ -22,6 +24,13 @@ struct Node {
   Node* right;
 };
 
+//=====================================================================================================================
+// Binary Search Tree class definition
+//=====================================================================================================================
+
+/**
+ * Define a class implementing a binary search tree
+ */
 class BinarySearchTree {
 
 private:
@@ -52,7 +61,7 @@ public:
   virtual ~BinarySearchTree();
   void InsertCourse(Course course);
   void InOrder();
-  Course search(string courseNumber);
+  Course Search(string courseNumber);
   bool isEmpty();
 };
 
@@ -112,14 +121,57 @@ void BinarySearchTree::InOrder() {
   inOrder(root);
 }
 
-void BinarySearchTree::inOrder() {
-  if (root != nullptr) {
-    inOrder(root->left);
-    displayCourse(root->course);
-    inOrder(root->right);
+void BinarySearchTree::inOrder(Node* node) {
+  if (node != nullptr) {
+    inOrder(node->left);
+    displayCourse(node->course);
+    inOrder(node->right);
   }
 }
 
+/**
+ * Search for a course
+ * @param courseNumber
+ * @return Course
+ */
+Course BinarySearchTree::Search(string courseNumber) {
+  return search(root, courseNumber);
+}
+
+Course BinarySearchTree::search(Node* node, string courseNumber) {
+  while (node != nullptr) {
+    if (node->course.courseNumber == courseNumber) {
+      return node->course;
+    }
+
+    if (courseNumber < node->course.courseNumber) {
+      node = node->left;
+    } else {
+      node = node->right;
+    }
+  }
+  return Course();
+}
+
+/**
+ * Destroy tree (post-order cleanup)
+ * @param node
+ */
+void BinarySearchTree::destroyTree(Node* node) {
+  if (node != nullptr) {
+    destroyTree(node->left);
+    destroyTree(node->right);
+    delete node;
+  }
+}
+
+bool BinarySearchTree::isEmpty() {
+  return root == nullptr;
+}
+
+//=====================================================================================================================
+// Helper methods
+//=====================================================================================================================
 
 /**
  *
