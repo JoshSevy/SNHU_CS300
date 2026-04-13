@@ -1,3 +1,9 @@
+//============================================================================
+// Name        : ProjectTwo.cpp
+// Author      : Joshua Sevy
+// Version     : 1.0
+// Description : Project Two ADCU Advising Assistance Program (Binary Search Tree)
+//============================================================================
 
 
 #include <iostream>
@@ -24,9 +30,9 @@ struct Node {
   Node* right;
 };
 
-//=====================================================================================================================
+//============================================================================
 // Binary Search Tree class definition
-//=====================================================================================================================
+//============================================================================
 
 /**
  * Define a class implementing a binary search tree
@@ -169,9 +175,43 @@ bool BinarySearchTree::isEmpty() {
   return root == nullptr;
 }
 
-//=====================================================================================================================
+//============================================================================
 // Helper methods
-//=====================================================================================================================
+//============================================================================
+
+/**
+ * Display a course
+ * @param course
+ */
+void displayCourse(Course course) {
+  cout << course.courseNumber << ", " << course.courseTitle << endl;
+}
+
+/**
+ * Convert string to uppercase
+ * @param str
+ * @return
+ */
+string toUpperCase(string str) {
+  transform(str.begin(), str.end(), str.begin(), ::toupper);
+  return str;
+}
+
+/**
+ * Split CSV line into tokens
+ * @param line
+ * @return
+ */
+vector<string> split(string line) {
+  vector<string> tokens;
+  string token;
+  stringstream ss(line);
+
+  while (getline(ss, token, ',')) {
+    tokens.push_back(token);
+  }
+  return tokens;
+}
 
 /**
  *
