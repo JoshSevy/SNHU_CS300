@@ -44,7 +44,6 @@ private:
 
   void addNode(Node* node, Course course);
   void inOrder(Node* node);
-  void preOrder(Node* node);
   Course search(Node* node, string courseNumber);
   void destroyTree(Node* node);
 
@@ -71,6 +70,56 @@ BinarySearchTree::~BinarySearchTree() {
   destroyTree(root);
   root = nullptr;
 }
+
+/**
+ * Insert a course
+ * @param course
+ */
+void BinarySearchTree::InsertCourse(Course course) {
+  if (root == nullptr) {
+    root = new Node(course);
+  } else {
+    addNode(root, course);
+  }
+}
+
+/**
+ * Add a node recursively
+ * @param node
+ * @param course
+ */
+void BinarySearchTree::addNode(Node* node, Course course) {
+  if (course.courseNumber < node->course.courseNumber) {
+    //
+    if (node->left == nullptr) {
+      node->left = new Node(course);
+    } else {
+      addNode(node->left, course);
+    }
+  } else {
+    if (node->right == nullptr) {
+      node->right = new Node(course);
+    } else {
+      addNode(node->right, course);
+    }
+  }
+}
+
+/**
+ * In-order traversal
+ */
+void BinarySearchTree::InOrder() {
+  inOrder(root);
+}
+
+void BinarySearchTree::inOrder() {
+  if (root != nullptr) {
+    inOrder(root->left);
+    displayCourse(root->course);
+    inOrder(root->right);
+  }
+}
+
 
 /**
  *
