@@ -5,14 +5,16 @@
 // Description : Project Two ABCU Advising Assistance Program (Binary Search Tree)
 //============================================================================
 
+#include <cctype>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <sstream>
+#include <string>
+#include <utility>
 #include <vector>
 
 using namespace std;
-
-// TODO: ADD similar comments from previous assignment boilerplate
 
 /**
  * A single course in the ABCU advising program.
@@ -23,14 +25,11 @@ struct Course {
   vector<string> prerequisites;
 };
 
-// Forward declarations
-void displayCourse(Course course);
+class BinarySearchTree;
 
-struct Node {
-  Course course;
-  Node* left;
-  Node* right;
-};
+// Forward declarations
+void displayCourse(const Course& course);
+void printPrerequisites(const vector<string>& prerequisites);
 
 //============================================================================
 // Binary Search Tree class definition
@@ -52,25 +51,27 @@ private:
       right = nullptr;
     }
 
-    Node(Course aCourse): Node() {
-      course = aCourse;
+    Node(Course singleCourse): Node() {
+      course = std::move(singleCourse);
     }
   };
 
   Node* root;
 
-  void addNode(Node* node, Course course);
-  void inOrder(Node* node);
-  Course search(Node* node, string courseNumber);
-  void destroyTree(Node* node);
+  static void addNode(Node* node, const Course& course);
+  static int countNodes(const Node* node);
+  static void destroyTree(const Node* node);
+  static void inOrder(const Node* node);
+  static Course search(const Node* node, const string& courseNumber);
 
 public:
   BinarySearchTree();
   virtual ~BinarySearchTree();
-  void InsertCourse(Course course);
-  void InOrder();
-  Course Search(string courseNumber);
-  bool isEmpty();
+  void InOrder() const;
+  void InsertCourse(const Course& course);
+  [[nodiscard]] bool isEmpty() const;
+  [[nodiscard]] Course Search(const string& courseNumber) const;
+  [[nodiscard]] int Size() const;
 };
 
 /**
@@ -92,7 +93,7 @@ BinarySearchTree::~BinarySearchTree() {
  * Insert a course
  * @param course
  */
-void BinarySearchTree::InsertCourse(Course course) {
+void BinarySearchTree::InsertCourse(const Course& course) {
   if (root == nullptr) {
     root = new Node(course);
   } else {
@@ -105,9 +106,8 @@ void BinarySearchTree::InsertCourse(Course course) {
  * @param node
  * @param course
  */
-void BinarySearchTree::addNode(Node* node, Course course) {
+void BinarySearchTree::addNode(Node* node, const Course& course) {
   if (course.courseNumber < node->course.courseNumber) {
-    //
     if (node->left == nullptr) {
       node->left = new Node(course);
     } else {
@@ -123,13 +123,29 @@ void BinarySearchTree::addNode(Node* node, Course course) {
 }
 
 /**
+ * Get the number of courses in the tree
+ * @return int
+ */
+int BinarySearchTree::Size() const {
+  return countNodes(root);
+}
+
+int BinarySearchTree::countNodes(const Node* node) {
+  if (node == nullptr) {
+    return 0;
+  }
+
+  return 1 + countNodes(node->left) + countNodes(node->right);
+}
+
+/**
  * In-order traversal
  */
-void BinarySearchTree::InOrder() {
+void BinarySearchTree::InOrder() const {
   inOrder(root);
 }
 
-void BinarySearchTree::inOrder(Node* node) {
+void BinarySearchTree::inOrder(const Node* node) {
   if (node != nullptr) {
     inOrder(node->left);
     displayCourse(node->course);
@@ -142,11 +158,11 @@ void BinarySearchTree::inOrder(Node* node) {
  * @param courseNumber
  * @return Course
  */
-Course BinarySearchTree::Search(string courseNumber) {
+Course BinarySearchTree::Search(const string& courseNumber) const {
   return search(root, courseNumber);
 }
 
-Course BinarySearchTree::search(Node* node, string courseNumber) {
+Course BinarySearchTree::search(const Node* node, const string& courseNumber) {
   while (node != nullptr) {
     if (node->course.courseNumber == courseNumber) {
       return node->course;
@@ -158,14 +174,14 @@ Course BinarySearchTree::search(Node* node, string courseNumber) {
       node = node->right;
     }
   }
-  return Course();
+  return {};
 }
 
 /**
  * Destroy tree (post-order cleanup)
  * @param node
  */
-void BinarySearchTree::destroyTree(Node* node) {
+void BinarySearchTree::destroyTree(const Node* node) {
   if (node != nullptr) {
     destroyTree(node->left);
     destroyTree(node->right);
@@ -173,7 +189,7 @@ void BinarySearchTree::destroyTree(Node* node) {
   }
 }
 
-bool BinarySearchTree::isEmpty() {
+bool BinarySearchTree::isEmpty() const {
   return root == nullptr;
 }
 
@@ -185,25 +201,25 @@ bool BinarySearchTree::isEmpty() {
  * Display a course
  * @param course
  */
-void displayCourse(Course course) {
+void displayCourse(const Course& course) {
   cout << course.courseNumber << ", " << course.courseTitle << endl;
 }
 
 /**
  * Trim whitespace from both ends of a string
  * @param str
- * @return
+ * @return string
  */
 string trim(const string &str) {
   // Find first non-space character
   size_t start = 0;
-  while (start < str.length() && isspace(str[start])) {
+  while (start < str.length() && isspace(static_cast<unsigned char>(str[start]))) {
     start++;
   }
 
   // Find last non-space character
   size_t end = str.length();
-  while (end > start && isspace(str[end - 1])) {
+  while (end > start && isspace(static_cast<unsigned char>(str[end - 1]))) {
     end--;
   }
 
@@ -214,25 +230,28 @@ string trim(const string &str) {
 /**
  * Convert string to uppercase
  * @param str
- * @return
+ * @return string
  */
 string toUpperCase(string str) {
-  ranges::transform(str, str.begin(), ::toupper);
+  for (size_t i = 0; i < str.length(); i++) {
+    str[i] = static_cast<char>(toupper(static_cast<unsigned char>(str[i])));
+  }
+
   return str;
 }
 
 /**
  * Split CSV line into tokens
  * @param line
- * @return
+ * @return vector<string>
  */
-vector<string> split(string line) {
+vector<string> split(const string& line) {
   vector<string> tokens;
   string token;
   stringstream ss(line);
 
   while (getline(ss, token, ',')) {
-    tokens.push_back(token);
+    tokens.push_back(trim(token));
   }
   return tokens;
 }
@@ -240,7 +259,7 @@ vector<string> split(string line) {
 /**
  * Validate that a course line contains at least a course number and title
  * @param tokens
- * @return
+ * @return bool
  */
 bool isValidCourseLine(const vector<string>& tokens) {
   if (tokens.size() < 2) {
@@ -258,7 +277,7 @@ bool isValidCourseLine(const vector<string>& tokens) {
  * Check if a prerequisite exists in the list of valid course numbers
  * @param prereq
  * @param validCourseNumbers
- * @return
+ * @return bool
  */
 bool prerequisiteExists(const string& prereq, const vector<string>& validCourseNumbers) {
   for (const string& validCourse : validCourseNumbers) {
@@ -269,12 +288,51 @@ bool prerequisiteExists(const string& prereq, const vector<string>& validCourseN
   return false;
 }
 
-void loadCourses(string fileName, BinarySearchTree*& bst) {
+/**
+ * Print prerequisite course numbers
+ * @param prerequisites
+ */
+void printPrerequisites(const vector<string>& prerequisites) {
+  if (prerequisites.empty()) {
+    cout << "Prerequisites: None" << endl;
+    return;
+  }
+
+  cout << "Prerequisites: ";
+  for (size_t i = 0; i < prerequisites.size(); ++i) {
+    cout << prerequisites.at(i);
+
+    if (i < prerequisites.size() - 1) {
+      cout << ", ";
+    }
+  }
+
+  cout << endl;
+}
+
+void printCourse(const BinarySearchTree* bst, const string& courseNumber) {
+  Course course = bst->Search(toUpperCase(courseNumber));
+
+  if (course.courseNumber.empty()) {
+    cout << "Course not found." << endl;
+    return;
+  }
+
+  cout << course.courseNumber << ", " << course.courseTitle << endl;
+  printPrerequisites(course.prerequisites);
+}
+
+/**
+ * Load courses from a CSV file and insert them into the binary search tree
+ * @param fileName
+ * @param bst
+ */
+void loadCourses(const string& fileName, BinarySearchTree*& bst) {
   ifstream file;
   file.open(fileName);
 
   if (!file.is_open()) {
-    cout << "Error opening file." << endl;
+    cout << "Error: unable to open file." << endl;
     return;
   }
 
@@ -285,8 +343,6 @@ void loadCourses(string fileName, BinarySearchTree*& bst) {
   vector<string> rawLines;
   vector<string> validCourseNumbers;
   string line;
-
-  cout << "Loading courses from file: " << fileName << endl;
 
   // First pass:
   // Read each line, validate the minimum format,
@@ -315,8 +371,8 @@ void loadCourses(string fileName, BinarySearchTree*& bst) {
 
   // Second pass:
   // Build course objects and verify that each prerequisite exists
-  for (int i = 0; i < rawLines.size(); i++) {
-    vector<string> tokens = split(rawLines.at(i));
+  for (const auto & rawLine : rawLines) {
+    vector<string> tokens = split(rawLine);
 
     Course newCourse;
     newCourse.courseNumber = toUpperCase(tokens.at(0));
@@ -325,8 +381,13 @@ void loadCourses(string fileName, BinarySearchTree*& bst) {
     vector<string> prereqList;
     bool isValid = true;
 
-    for (int j = 2; j < tokens.size(); ++j) {
+    for (size_t j = 2; j < tokens.size(); ++j) {
       string prereq = toUpperCase(tokens.at(j));
+
+      // Skip empty prerequisite values
+      if (prereq.empty()) {
+        continue;
+      }
 
       if (!prerequisiteExists(prereq, validCourseNumbers)) {
         cout << "Invalid prerequisite: " << prereq << " for course " << newCourse.courseNumber << endl;
@@ -337,23 +398,21 @@ void loadCourses(string fileName, BinarySearchTree*& bst) {
       prereqList.push_back(prereq);
     }
 
-    // Only store valid courses so bad data does no affect the tree
+    // Only store valid courses so bad data does not affect the tree
     if (isValid) {
       newCourse.prerequisites = prereqList;
       bst->InsertCourse(newCourse);
     }
   }
+  cout << bst->Size() << " courses loaded." << endl;
 }
 
-
-
 /**
- *
- * @return
+ * The one and only main() method
  */
 int main() {
 
-  BinarySearchTree* bst = new BinarySearchTree();
+  auto* bst = new BinarySearchTree();
 
   int choice = 0;
   string fileName;
@@ -362,19 +421,28 @@ int main() {
   cout << "Welcome to the course planner." << endl;
 
   while (choice != 9) {
-    cout << "  1. Load Data Structure" << endl;
-    cout << "  2. Print Course List" << endl;
-    cout << "  3. Print Course" << endl;
-    cout << "  4. Exit" << endl;
-    cout << "What would you like to do?" << endl;
+    cout << "1. Load Data Structure." << endl;
+    cout << "2. Print Course List." << endl;
+    cout << "3. Print Course." << endl;
+    cout << "9. Exit" << endl;
+    cout << "What would you like to do? ";
     cin >> choice;
+
+    // Handle invalid input
+    if (cin.fail()) {
+      cin.clear(); // reset error state
+      cin.ignore(numeric_limits<streamsize>::max(), '\n'); // discard bad input
+      cout << "Invalid input. Please enter a valid number." << endl;
+      continue; // restart loop, display menu choices
+    }
 
     switch (choice) {
       case 1:
         cout << "Enter file name: ";
         cin >> fileName;
-        // TODO: Implement loading file
+        loadCourses(fileName, bst);
         break;
+
       case 2:
         if (bst->isEmpty()) {
           cout << "No courses loaded."  << endl;
@@ -383,38 +451,21 @@ int main() {
           bst->InOrder();
         }
         break;
+
       case 3:
         if (bst->isEmpty()) {
           cout << "No courses loaded."  << endl;
         } else {
           cout << "What course do you want to know about? ";
           cin >> courseNumber;
-          courseNumber = toUpperCase(courseNumber);
-          Course course = bst->Search(courseNumber);
-
-          if (course.courseNumber.empty()) {
-            cout << "Course not found." << endl;
-          } else {
-            cout << course.courseNumber << ", " << course.courseTitle << endl;
-
-            if (course.prerequisites.empty()) {
-              cout << "Prerequisites: None" << endl;
-            } else {
-              cout << "Prerequisites: ";
-              for (size_t i = 0; i < course.prerequisites.size(); ++i) {
-                cout << course.prerequisites.at(i);
-                if (i < course.prerequisites.size() - 1) {
-                  cout << ", ";
-                }
-              }
-              cout << endl;
-            }
-          }
+          printCourse(bst, courseNumber);
         }
         break;
+
       case 9:
         cout << "Thank you for using the course planner!" << endl;
         break;
+
       default:
         cout << choice << " is not a valid option." << endl;
         break;
