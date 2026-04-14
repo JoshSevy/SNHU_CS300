@@ -5,7 +5,6 @@
 // Description : Project Two ABCU Advising Assistance Program (Binary Search Tree)
 //============================================================================
 
-#include <cctype>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -13,8 +12,6 @@
 #include <vector>
 
 using namespace std;
-
-// TODO: ADD similar comments from previous assignment boilerplate
 
 /**
  * A single course in the ABCU advising program.
@@ -28,8 +25,8 @@ struct Course {
 class BinarySearchTree;
 
 // Forward declarations
-void displayCourse(Course course);
-void printPrerequisites(BinarySearchTree* bst, const vector<string>& prerequisites);
+void displayCourse(const Course& course);
+void printPrerequisites(const BinarySearchTree* bst, const vector<string>& prerequisites);
 
 //============================================================================
 // Binary Search Tree class definition
@@ -51,25 +48,28 @@ private:
       right = nullptr;
     }
 
-    Node(Course aCourse): Node() {
-      course = aCourse;
+    Node(Course singleCourse): Node() {
+      course = singleCourse;
     }
   };
 
   Node* root;
 
-  void addNode(Node* node, Course course);
-  void inOrder(Node* node);
-  Course search(Node* node, string courseNumber);
-  void destroyTree(Node* node);
+  static void addNode(Node* node, const Course& course);
+
+  static void inOrder(const Node* node);
+
+  static Course search(Node* node, const string& courseNumber);
+
+  static void destroyTree(const Node* node);
 
 public:
   BinarySearchTree();
   virtual ~BinarySearchTree();
-  void InsertCourse(Course course);
-  void InOrder();
-  Course Search(string courseNumber);
-  bool isEmpty();
+  void InsertCourse(const Course& course);
+  void InOrder() const;
+  Course Search(const string &courseNumber) const;
+  bool isEmpty() const;
 };
 
 /**
@@ -91,7 +91,7 @@ BinarySearchTree::~BinarySearchTree() {
  * Insert a course
  * @param course
  */
-void BinarySearchTree::InsertCourse(Course course) {
+void BinarySearchTree::InsertCourse(const Course& course) {
   if (root == nullptr) {
     root = new Node(course);
   } else {
@@ -104,7 +104,7 @@ void BinarySearchTree::InsertCourse(Course course) {
  * @param node
  * @param course
  */
-void BinarySearchTree::addNode(Node* node, Course course) {
+void BinarySearchTree::addNode(Node* node, const Course& course) {
   if (course.courseNumber < node->course.courseNumber) {
     //
     if (node->left == nullptr) {
@@ -124,11 +124,11 @@ void BinarySearchTree::addNode(Node* node, Course course) {
 /**
  * In-order traversal
  */
-void BinarySearchTree::InOrder() {
+void BinarySearchTree::InOrder() const {
   inOrder(root);
 }
 
-void BinarySearchTree::inOrder(Node* node) {
+void BinarySearchTree::inOrder(const Node* node) {
   if (node != nullptr) {
     inOrder(node->left);
     displayCourse(node->course);
@@ -141,11 +141,11 @@ void BinarySearchTree::inOrder(Node* node) {
  * @param courseNumber
  * @return Course
  */
-Course BinarySearchTree::Search(string courseNumber) {
+Course BinarySearchTree::Search(const string &courseNumber) const {
   return search(root, courseNumber);
 }
 
-Course BinarySearchTree::search(Node* node, string courseNumber) {
+Course BinarySearchTree::search(Node* node, const string& courseNumber) {
   while (node != nullptr) {
     if (node->course.courseNumber == courseNumber) {
       return node->course;
@@ -164,7 +164,7 @@ Course BinarySearchTree::search(Node* node, string courseNumber) {
  * Destroy tree (post-order cleanup)
  * @param node
  */
-void BinarySearchTree::destroyTree(Node* node) {
+void BinarySearchTree::destroyTree(const Node* node) {
   if (node != nullptr) {
     destroyTree(node->left);
     destroyTree(node->right);
@@ -172,7 +172,7 @@ void BinarySearchTree::destroyTree(Node* node) {
   }
 }
 
-bool BinarySearchTree::isEmpty() {
+bool BinarySearchTree::isEmpty() const {
   return root == nullptr;
 }
 
@@ -184,7 +184,7 @@ bool BinarySearchTree::isEmpty() {
  * Display a course
  * @param course
  */
-void displayCourse(Course course) {
+void displayCourse(const Course& course) {
   cout << course.courseNumber << ", " << course.courseTitle << endl;
 }
 
@@ -228,7 +228,7 @@ string toUpperCase(string str) {
  * @param line
  * @return
  */
-vector<string> split(string line) {
+vector<string> split(const string& line) {
   vector<string> tokens;
   string token;
   stringstream ss(line);
@@ -276,26 +276,26 @@ bool prerequisiteExists(const string& prereq, const vector<string>& validCourseN
  * @param bst
  * @param prerequisites
  */
-void printPrerequisites(BinarySearchTree* bst, const vector<string>& prerequisites) {
+void printPrerequisites(const BinarySearchTree* bst, const vector<string>& prerequisites) {
   if (prerequisites.empty()) {
     cout << "Prerequisites: None" << endl;
     return;
   }
 
   cout << "Prerequisites:" << endl;
-  for (size_t i = 0; i < prerequisites.size(); ++i) {
-    Course prereqCourse = bst->Search(prerequisites.at(i));
+  for (const auto & prerequisite : prerequisites) {
+    Course prereqCourse = bst->Search(prerequisite);
 
     if (!prereqCourse.courseNumber.empty()) {
       cout << prereqCourse.courseNumber << ", " << prereqCourse.courseTitle << endl;
     } else {
       // Fall back to course number if anything is missing
-      cout << prerequisites.at(i) << endl;
+      cout << prerequisite << endl;
     }
   }
 }
 
-void printCourse(BinarySearchTree* bst, string courseNumber) {
+void printCourse(const BinarySearchTree* bst, const string &courseNumber) {
   Course course = bst->Search(toUpperCase(courseNumber));
 
   if (course.courseNumber.empty()) {
@@ -308,7 +308,7 @@ void printCourse(BinarySearchTree* bst, string courseNumber) {
 }
 
 
-void loadCourses(string fileName, BinarySearchTree*& bst) {
+void loadCourses(const string& fileName, BinarySearchTree*& bst) {
   ifstream file;
   file.open(fileName);
 
@@ -354,8 +354,8 @@ void loadCourses(string fileName, BinarySearchTree*& bst) {
 
   // Second pass:
   // Build course objects and verify that each prerequisite exists
-  for (int i = 0; i < rawLines.size(); i++) {
-    vector<string> tokens = split(rawLines.at(i));
+  for (const auto & rawLine : rawLines) {
+    vector<string> tokens = split(rawLine);
 
     Course newCourse;
     newCourse.courseNumber = toUpperCase(tokens.at(0));
@@ -383,8 +383,6 @@ void loadCourses(string fileName, BinarySearchTree*& bst) {
     }
   }
 }
-
-
 
 /**
  *
