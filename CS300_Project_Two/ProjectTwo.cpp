@@ -5,9 +5,9 @@
 // Description : Project Two ABCU Advising Assistance Program (Binary Search Tree)
 //============================================================================
 
-#include <cctype>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -57,20 +57,19 @@ private:
   Node* root;
 
   static void addNode(Node* node, const Course& course);
-
-  static void inOrder(const Node* node);
-
-  static Course search(const Node* node, const string& courseNumber);
-
+  static int countNodes(const Node* node);
   static void destroyTree(const Node* node);
+  static void inOrder(const Node* node);
+  static Course search(const Node* node, const string& courseNumber);
 
 public:
   BinarySearchTree();
   virtual ~BinarySearchTree();
-  void InsertCourse(const Course& course);
   void InOrder() const;
-  Course Search(const string &courseNumber) const;
+  void InsertCourse(const Course& course);
   bool isEmpty() const;
+  Course Search(const string &courseNumber) const;
+  int Size() const;
 };
 
 /**
@@ -120,6 +119,22 @@ void BinarySearchTree::addNode(Node* node, const Course& course) {
       addNode(node->right, course);
     }
   }
+}
+
+/**
+ * Get the number of courses in the tree
+ * @return int
+ */
+int BinarySearchTree::Size() const {
+  return countNodes(root);
+}
+
+int BinarySearchTree::countNodes(const Node* node) {
+  if (node == nullptr) {
+    return 0;
+  }
+
+  return 1 + countNodes(node->left) + countNodes(node->right);
 }
 
 /**
@@ -192,7 +207,7 @@ void displayCourse(const Course& course) {
 /**
  * Trim whitespace from both ends of a string
  * @param str
- * @return
+ * @return string
  */
 string trim(const string &str) {
   // Find first non-space character
@@ -214,11 +229,11 @@ string trim(const string &str) {
 /**
  * Convert string to uppercase
  * @param str
- * @return
+ * @return string
  */
 string toUpperCase(string str) {
   for (size_t i = 0; i < str.length(); i++) {
-    str[i] = static_cast<char>(toupper(str[i]));
+    str[i] = static_cast<char>(toupper(static_cast<unsigned char>(str[i])));
   }
 
   return str;
@@ -227,7 +242,7 @@ string toUpperCase(string str) {
 /**
  * Split CSV line into tokens
  * @param line
- * @return
+ * @return vector<string>
  */
 vector<string> split(const string& line) {
   vector<string> tokens;
@@ -243,7 +258,7 @@ vector<string> split(const string& line) {
 /**
  * Validate that a course line contains at least a course number and title
  * @param tokens
- * @return
+ * @return bool
  */
 bool isValidCourseLine(const vector<string>& tokens) {
   if (tokens.size() < 2) {
@@ -261,7 +276,7 @@ bool isValidCourseLine(const vector<string>& tokens) {
  * Check if a prerequisite exists in the list of valid course numbers
  * @param prereq
  * @param validCourseNumbers
- * @return
+ * @return bool
  */
 bool prerequisiteExists(const string& prereq, const vector<string>& validCourseNumbers) {
   for (const string& validCourse : validCourseNumbers) {
@@ -308,7 +323,11 @@ void printCourse(const BinarySearchTree* bst, const string &courseNumber) {
   printPrerequisites(bst, course.prerequisites);
 }
 
-
+/**
+ * Load courses from a CSV file and insert them into the binary search tree
+ * @param fileName
+ * @param bst
+ */
 void loadCourses(const string& fileName, BinarySearchTree*& bst) {
   ifstream file;
   file.open(fileName);
@@ -326,7 +345,7 @@ void loadCourses(const string& fileName, BinarySearchTree*& bst) {
   vector<string> validCourseNumbers;
   string line;
 
-  cout << "Loading courses from file: " << fileName << endl;
+  cout << "Courses loaded successfully." << endl;
 
   // First pass:
   // Read each line, validate the minimum format,
@@ -383,11 +402,12 @@ void loadCourses(const string& fileName, BinarySearchTree*& bst) {
       bst->InsertCourse(newCourse);
     }
   }
+
+  cout << bst->Size() << " courses loaded." << endl;
 }
 
 /**
- *
- * @return
+ * The one and only main() method
  */
 int main() {
 
@@ -406,6 +426,14 @@ int main() {
     cout << "9. Exit" << endl;
     cout << "What would you like to do? ";
     cin >> choice;
+
+    // Handle invalid input
+    if (cin.fail()) {
+      cin.clear(); // reset error state
+      cin.ignore(numeric_limits<streamsize>::max(), '\n'); // discard bad input
+      cout << "Invalid input. Please enter a valid number." << endl;
+      continue; // restart loop, display menu choices
+    }
 
     switch (choice) {
       case 1:
