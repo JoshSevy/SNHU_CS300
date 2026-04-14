@@ -5,6 +5,7 @@
 // Description : Project Two ABCU Advising Assistance Program (Binary Search Tree)
 //============================================================================
 
+#include <cctype>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -59,7 +60,7 @@ private:
 
   static void inOrder(const Node* node);
 
-  static Course search(Node* node, const string& courseNumber);
+  static Course search(const Node* node, const string& courseNumber);
 
   static void destroyTree(const Node* node);
 
@@ -145,7 +146,7 @@ Course BinarySearchTree::Search(const string &courseNumber) const {
   return search(root, courseNumber);
 }
 
-Course BinarySearchTree::search(Node* node, const string& courseNumber) {
+Course BinarySearchTree::search(const Node* node, const string& courseNumber) {
   while (node != nullptr) {
     if (node->course.courseNumber == courseNumber) {
       return node->course;
@@ -196,13 +197,13 @@ void displayCourse(const Course& course) {
 string trim(const string &str) {
   // Find first non-space character
   size_t start = 0;
-  while (start < str.length() && isspace(str[start])) {
+  while (start < str.length() && isspace(static_cast<unsigned char>(str[start]))) {
     start++;
   }
 
   // Find last non-space character
   size_t end = str.length();
-  while (end > start && isspace(str[end - 1])) {
+  while (end > start && isspace(static_cast<unsigned char>(str[end - 1]))) {
     end--;
   }
 
@@ -376,7 +377,7 @@ void loadCourses(const string& fileName, BinarySearchTree*& bst) {
       prereqList.push_back(prereq);
     }
 
-    // Only store valid courses so bad data does no affect the tree
+    // Only store valid courses so bad data does not affect the tree
     if (isValid) {
       newCourse.prerequisites = prereqList;
       bst->InsertCourse(newCourse);
@@ -399,10 +400,10 @@ int main() {
   cout << "Welcome to the course planner." << endl;
 
   while (choice != 9) {
-    cout << "  1. Load Data Structure" << endl;
-    cout << "  2. Print Course List" << endl;
-    cout << "  3. Print Course" << endl;
-    cout << "  9. Exit" << endl;
+    cout << "1. Load Data Structure" << endl;
+    cout << "2. Print Course List" << endl;
+    cout << "3. Print Course" << endl;
+    cout << "9. Exit" << endl;
     cout << "What would you like to do? ";
     cin >> choice;
 
