@@ -11,6 +11,7 @@
 #include <limits>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace std;
@@ -28,7 +29,7 @@ class BinarySearchTree;
 
 // Forward declarations
 void displayCourse(const Course& course);
-void printPrerequisites(const BinarySearchTree* bst, const vector<string>& prerequisites);
+void printPrerequisites(const vector<string>& prerequisites);
 
 //============================================================================
 // Binary Search Tree class definition
@@ -51,7 +52,7 @@ private:
     }
 
     Node(Course singleCourse): Node() {
-      course = singleCourse;
+      course = std::move(singleCourse);
     }
   };
 
@@ -68,9 +69,9 @@ public:
   virtual ~BinarySearchTree();
   void InOrder() const;
   void InsertCourse(const Course& course);
-  bool isEmpty() const;
-  Course Search(const string &courseNumber) const;
-  int Size() const;
+  [[nodiscard]] bool isEmpty() const;
+  [[nodiscard]] Course Search(const string& courseNumber) const;
+  [[nodiscard]] int Size() const;
 };
 
 /**
@@ -107,7 +108,6 @@ void BinarySearchTree::InsertCourse(const Course& course) {
  */
 void BinarySearchTree::addNode(Node* node, const Course& course) {
   if (course.courseNumber < node->course.courseNumber) {
-    //
     if (node->left == nullptr) {
       node->left = new Node(course);
     } else {
@@ -158,7 +158,7 @@ void BinarySearchTree::inOrder(const Node* node) {
  * @param courseNumber
  * @return Course
  */
-Course BinarySearchTree::Search(const string &courseNumber) const {
+Course BinarySearchTree::Search(const string& courseNumber) const {
   return search(root, courseNumber);
 }
 
@@ -174,7 +174,7 @@ Course BinarySearchTree::search(const Node* node, const string& courseNumber) {
       node = node->right;
     }
   }
-  return Course();
+  return {};
 }
 
 /**
@@ -289,17 +289,16 @@ bool prerequisiteExists(const string& prereq, const vector<string>& validCourseN
 }
 
 /**
- * Print prerequisite course numbers and titles
- * @param bst
+ * Print prerequisite course numbers
  * @param prerequisites
  */
-void printPrerequisites(const BinarySearchTree* bst, const vector<string>& prerequisites) {
+void printPrerequisites(const vector<string>& prerequisites) {
   if (prerequisites.empty()) {
     cout << "Prerequisites: None" << endl;
     return;
   }
 
-  cout << "Prerequisites:" << endl;
+  cout << "Prerequisites: ";
   for (size_t i = 0; i < prerequisites.size(); ++i) {
     cout << prerequisites.at(i);
 
@@ -311,7 +310,7 @@ void printPrerequisites(const BinarySearchTree* bst, const vector<string>& prere
   cout << endl;
 }
 
-void printCourse(const BinarySearchTree* bst, const string &courseNumber) {
+void printCourse(const BinarySearchTree* bst, const string& courseNumber) {
   Course course = bst->Search(toUpperCase(courseNumber));
 
   if (course.courseNumber.empty()) {
@@ -320,7 +319,7 @@ void printCourse(const BinarySearchTree* bst, const string &courseNumber) {
   }
 
   cout << course.courseNumber << ", " << course.courseTitle << endl;
-  printPrerequisites(bst, course.prerequisites);
+  printPrerequisites(course.prerequisites);
 }
 
 /**
@@ -333,7 +332,7 @@ void loadCourses(const string& fileName, BinarySearchTree*& bst) {
   file.open(fileName);
 
   if (!file.is_open()) {
-    cout << "Error opening file." << endl;
+    cout << "Error: unable to open file." << endl;
     return;
   }
 
@@ -344,8 +343,6 @@ void loadCourses(const string& fileName, BinarySearchTree*& bst) {
   vector<string> rawLines;
   vector<string> validCourseNumbers;
   string line;
-
-  cout << bst->Size() << " courses loaded." << endl;
 
   // First pass:
   // Read each line, validate the minimum format,
@@ -387,6 +384,11 @@ void loadCourses(const string& fileName, BinarySearchTree*& bst) {
     for (size_t j = 2; j < tokens.size(); ++j) {
       string prereq = toUpperCase(tokens.at(j));
 
+      // Skip empty prerequisite values
+      if (prereq.empty()) {
+        continue;
+      }
+
       if (!prerequisiteExists(prereq, validCourseNumbers)) {
         cout << "Invalid prerequisite: " << prereq << " for course " << newCourse.courseNumber << endl;
         isValid = false;
@@ -402,6 +404,7 @@ void loadCourses(const string& fileName, BinarySearchTree*& bst) {
       bst->InsertCourse(newCourse);
     }
   }
+  cout << bst->Size() << " courses loaded." << endl;
 }
 
 /**
@@ -409,7 +412,7 @@ void loadCourses(const string& fileName, BinarySearchTree*& bst) {
  */
 int main() {
 
-  BinarySearchTree* bst = new BinarySearchTree();
+  auto* bst = new BinarySearchTree();
 
   int choice = 0;
   string fileName;
