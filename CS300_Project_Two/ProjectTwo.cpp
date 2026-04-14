@@ -5,9 +5,11 @@
 // Description : Project Two ABCU Advising Assistance Program (Binary Search Tree)
 //============================================================================
 
+#include <cctype>
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <vector>
 
 using namespace std;
@@ -23,14 +25,11 @@ struct Course {
   vector<string> prerequisites;
 };
 
+class BinarySearchTree;
+
 // Forward declarations
 void displayCourse(Course course);
-
-struct Node {
-  Course course;
-  Node* left;
-  Node* right;
-};
+void printPrerequisites(BinarySearchTree* bst, const vector<string>& prerequisites);
 
 //============================================================================
 // Binary Search Tree class definition
@@ -217,7 +216,10 @@ string trim(const string &str) {
  * @return
  */
 string toUpperCase(string str) {
-  ranges::transform(str, str.begin(), ::toupper);
+  for (size_t i = 0; i < str.length(); i++) {
+    str[i] = static_cast<char>(toupper(str[i]));
+  }
+
   return str;
 }
 
@@ -232,7 +234,7 @@ vector<string> split(string line) {
   stringstream ss(line);
 
   while (getline(ss, token, ',')) {
-    tokens.push_back(token);
+    tokens.push_back(trim(token));
   }
   return tokens;
 }
@@ -268,6 +270,43 @@ bool prerequisiteExists(const string& prereq, const vector<string>& validCourseN
   }
   return false;
 }
+
+/**
+ * Print prerequisite course numbers and titles
+ * @param bst
+ * @param prerequisites
+ */
+void printPrerequisites(BinarySearchTree* bst, const vector<string>& prerequisites) {
+  if (prerequisites.empty()) {
+    cout << "Prerequisites: None" << endl;
+    return;
+  }
+
+  cout << "Prerequisites:" << endl;
+  for (size_t i = 0; i < prerequisites.size(); ++i) {
+    Course prereqCourse = bst->Search(prerequisites.at(i));
+
+    if (!prereqCourse.courseNumber.empty()) {
+      cout << prereqCourse.courseNumber << ", " << prereqCourse.courseTitle << endl;
+    } else {
+      // Fall back to course number if anything is missing
+      cout << prerequisites.at(i) << endl;
+    }
+  }
+}
+
+void printCourse(BinarySearchTree* bst, string courseNumber) {
+  Course course = bst->Search(toUpperCase(courseNumber));
+
+  if (course.courseNumber.empty()) {
+    cout << "Course not found." << endl;
+    return;
+  }
+
+  cout << course.courseNumber << ", " << course.courseTitle << endl;
+  printPrerequisites(bst, course.prerequisites);
+}
+
 
 void loadCourses(string fileName, BinarySearchTree*& bst) {
   ifstream file;
@@ -365,16 +404,17 @@ int main() {
     cout << "  1. Load Data Structure" << endl;
     cout << "  2. Print Course List" << endl;
     cout << "  3. Print Course" << endl;
-    cout << "  4. Exit" << endl;
-    cout << "What would you like to do?" << endl;
+    cout << "  9. Exit" << endl;
+    cout << "What would you like to do? ";
     cin >> choice;
 
     switch (choice) {
       case 1:
         cout << "Enter file name: ";
         cin >> fileName;
-        // TODO: Implement loading file
+        loadCourses(fileName, bst);
         break;
+
       case 2:
         if (bst->isEmpty()) {
           cout << "No courses loaded."  << endl;
@@ -383,38 +423,21 @@ int main() {
           bst->InOrder();
         }
         break;
+
       case 3:
         if (bst->isEmpty()) {
           cout << "No courses loaded."  << endl;
         } else {
           cout << "What course do you want to know about? ";
           cin >> courseNumber;
-          courseNumber = toUpperCase(courseNumber);
-          Course course = bst->Search(courseNumber);
-
-          if (course.courseNumber.empty()) {
-            cout << "Course not found." << endl;
-          } else {
-            cout << course.courseNumber << ", " << course.courseTitle << endl;
-
-            if (course.prerequisites.empty()) {
-              cout << "Prerequisites: None" << endl;
-            } else {
-              cout << "Prerequisites: ";
-              for (size_t i = 0; i < course.prerequisites.size(); ++i) {
-                cout << course.prerequisites.at(i);
-                if (i < course.prerequisites.size() - 1) {
-                  cout << ", ";
-                }
-              }
-              cout << endl;
-            }
-          }
+          printCourse(bst, courseNumber);
         }
         break;
+
       case 9:
         cout << "Thank you for using the course planner!" << endl;
         break;
+
       default:
         cout << choice << " is not a valid option." << endl;
         break;
