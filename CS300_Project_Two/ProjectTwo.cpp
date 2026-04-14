@@ -2,9 +2,10 @@
 // Name        : ProjectTwo.cpp
 // Author      : Joshua Sevy
 // Version     : 1.0
-// Description : Project Two ADCU Advising Assistance Program (Binary Search Tree)
+// Description : Project Two ABCU Advising Assistance Program (Binary Search Tree)
 //============================================================================
 
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -189,12 +190,34 @@ void displayCourse(Course course) {
 }
 
 /**
+ * Trim whitespace from both ends of a string
+ * @param str
+ * @return
+ */
+string trim(const string &str) {
+  // Find first non-space character
+  size_t start = 0;
+  while (start < str.length() && isspace(str[start])) {
+    start++;
+  }
+
+  // Find last non-space character
+  size_t end = str.length();
+  while (end > start && isspace(str[end - 1])) {
+    end--;
+  }
+
+  // Return substring between start and end
+  return str.substr(start, end - start);
+}
+
+/**
  * Convert string to uppercase
  * @param str
  * @return
  */
 string toUpperCase(string str) {
-  transform(str.begin(), str.end(), str.begin(), ::toupper);
+  ranges::transform(str, str.begin(), ::toupper);
   return str;
 }
 
@@ -213,6 +236,116 @@ vector<string> split(string line) {
   }
   return tokens;
 }
+
+/**
+ * Validate that a course line contains at least a course number and title
+ * @param tokens
+ * @return
+ */
+bool isValidCourseLine(const vector<string>& tokens) {
+  if (tokens.size() < 2) {
+    return false;
+  }
+
+  if (tokens.at(0).empty() || tokens.at(1).empty()) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Check if a prerequisite exists in the list of valid course numbers
+ * @param prereq
+ * @param validCourseNumbers
+ * @return
+ */
+bool prerequisiteExists(const string& prereq, const vector<string>& validCourseNumbers) {
+  for (const string& validCourse : validCourseNumbers) {
+    if (prereq == validCourse) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void loadCourses(string fileName, BinarySearchTree*& bst) {
+  ifstream file;
+  file.open(fileName);
+
+  if (!file.is_open()) {
+    cout << "Error opening file." << endl;
+    return;
+  }
+
+  // Make sure tree is reset before loading a new file
+  delete bst;
+  bst = new BinarySearchTree();
+
+  vector<string> rawLines;
+  vector<string> validCourseNumbers;
+  string line;
+
+  cout << "Loading courses from file: " << fileName << endl;
+
+  // First pass:
+  // Read each line, validate the minimum format,
+  // collect all course numbers for later prerequisite checks
+  while (getline(file, line)) {
+    line = trim(line);
+
+    if (line.empty()) {
+      continue;
+    }
+
+    vector<string> tokens = split(line);
+
+    if (!isValidCourseLine(tokens)) {
+      cout << "Invalid file format: " << line << endl;
+      continue;
+    }
+
+    tokens.at(0) = toUpperCase(tokens.at(0));
+
+    rawLines.push_back(line);
+    validCourseNumbers.push_back(tokens.at(0));
+  }
+
+  file.close();
+
+  // Second pass:
+  // Build course objects and verify that each prerequisite exists
+  for (int i = 0; i < rawLines.size(); i++) {
+    vector<string> tokens = split(rawLines.at(i));
+
+    Course newCourse;
+    newCourse.courseNumber = toUpperCase(tokens.at(0));
+    newCourse.courseTitle = tokens.at(1);
+
+    vector<string> prereqList;
+    bool isValid = true;
+
+    for (int j = 2; j < tokens.size(); ++j) {
+      string prereq = toUpperCase(tokens.at(j));
+
+      if (!prerequisiteExists(prereq, validCourseNumbers)) {
+        cout << "Invalid prerequisite: " << prereq << " for course " << newCourse.courseNumber << endl;
+        isValid = false;
+        break;
+      }
+
+      prereqList.push_back(prereq);
+    }
+
+    // Only store valid courses so bad data does no affect the tree
+    if (isValid) {
+      newCourse.prerequisites = prereqList;
+      bst->InsertCourse(newCourse);
+    }
+  }
+}
+
+
 
 /**
  *
