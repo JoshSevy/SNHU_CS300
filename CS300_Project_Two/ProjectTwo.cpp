@@ -5,6 +5,7 @@
 // Description : Project Two ABCU Advising Assistance Program (Binary Search Tree)
 //============================================================================
 
+#include <cctype>
 #include <fstream>
 #include <iostream>
 #include <limits>
@@ -299,16 +300,15 @@ void printPrerequisites(const BinarySearchTree* bst, const vector<string>& prere
   }
 
   cout << "Prerequisites:" << endl;
-  for (const auto & prerequisite : prerequisites) {
-    Course prereqCourse = bst->Search(prerequisite);
+  for (size_t i = 0; i < prerequisites.size(); ++i) {
+    cout << prerequisites.at(i);
 
-    if (!prereqCourse.courseNumber.empty()) {
-      cout << prereqCourse.courseNumber << ", " << prereqCourse.courseTitle << endl;
-    } else {
-      // Fall back to course number if anything is missing
-      cout << prerequisite << endl;
+    if (i < prerequisites.size() - 1) {
+      cout << ", ";
     }
   }
+
+  cout << endl;
 }
 
 void printCourse(const BinarySearchTree* bst, const string &courseNumber) {
@@ -345,7 +345,7 @@ void loadCourses(const string& fileName, BinarySearchTree*& bst) {
   vector<string> validCourseNumbers;
   string line;
 
-  cout << "Courses loaded successfully." << endl;
+  cout << bst->Size() << " courses loaded." << endl;
 
   // First pass:
   // Read each line, validate the minimum format,
@@ -384,7 +384,7 @@ void loadCourses(const string& fileName, BinarySearchTree*& bst) {
     vector<string> prereqList;
     bool isValid = true;
 
-    for (int j = 2; j < tokens.size(); ++j) {
+    for (size_t j = 2; j < tokens.size(); ++j) {
       string prereq = toUpperCase(tokens.at(j));
 
       if (!prerequisiteExists(prereq, validCourseNumbers)) {
@@ -402,8 +402,6 @@ void loadCourses(const string& fileName, BinarySearchTree*& bst) {
       bst->InsertCourse(newCourse);
     }
   }
-
-  cout << bst->Size() << " courses loaded." << endl;
 }
 
 /**
@@ -420,9 +418,9 @@ int main() {
   cout << "Welcome to the course planner." << endl;
 
   while (choice != 9) {
-    cout << "1. Load Data Structure" << endl;
-    cout << "2. Print Course List" << endl;
-    cout << "3. Print Course" << endl;
+    cout << "1. Load Data Structure." << endl;
+    cout << "2. Print Course List." << endl;
+    cout << "3. Print Course." << endl;
     cout << "9. Exit" << endl;
     cout << "What would you like to do? ";
     cin >> choice;
