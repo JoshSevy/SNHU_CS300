@@ -439,7 +439,8 @@ int main() {
     switch (choice) {
       case 1:
         cout << "Enter file name: ";
-        cin >> fileName;
+        // Use getline to allow fileNames with spaces (e.g., CS 300 Advising Program Input.csv")
+        getline(cin >> ws, fileName);
         loadCourses(fileName, bst);
         break;
 
